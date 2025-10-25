@@ -123,19 +123,23 @@ const availableIcons = [
     { name: "Mais", icon: MoreHorizontal },
 ];
 
-const formSchema = z.object({
+const transactionSchema = z.object({
   amount: z.coerce.number().min(0.01, "O valor deve ser maior que zero."),
   type: z.enum(["income", "expense"]),
   date: z.date({ required_error: "A data é obrigatória."}),
   isRecurring: z.boolean().default(false),
   category: z.string().min(1, "A categoria é obrigatória."),
-  newCategory: z.string().optional(),
-  newCategoryIcon: z.string().optional(),
   notes: z.string().optional(),
   description: z.string().min(1, "A descrição é obrigatória."),
 });
 
-type TransactionFormValues = z.infer<typeof formSchema>;
+const categorySchema = z.object({
+    newCategoryName: z.string().min(1, "O nome da categoria é obrigatório."),
+    newCategoryIcon: z.string().min(1, "O ícone é obrigatório."),
+});
+
+type TransactionFormValues = z.infer<typeof transactionSchema>;
+type CategoryFormValues = z.infer<typeof categorySchema>;
 
 const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -144,48 +148,136 @@ const formatCurrency = (value: number) => {
     }).format(value);
 };
 
+function AddCategoryDialog({ onCategoryAdded }: { onCategoryAdded: (category: Category) => void }) {
+    const [isOpen, setIsOpen] = React.useState(false);
+    const form = useForm<CategoryFormValues>({
+        resolver: zodResolver(categorySchema),
+        defaultValues: {
+            newCategoryName: "",
+            newCategoryIcon: "Tag",
+        },
+    });
+
+    function onSubmit(data: CategoryFormValues) {
+        const IconComponent = availableIcons.find(i => i.name === data.newCategoryIcon)?.icon || Tag;
+        const newCategory = { name: data.newCategoryName, icon: IconComponent };
+        
+        onCategoryAdded(newCategory);
+
+        toast({
+            title: "Categoria Adicionada!",
+            description: `A categoria "${data.newCategoryName}" foi criada com sucesso.`,
+        });
+        form.reset();
+        setIsOpen(false);
+    }
+
+    return (
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="h-10">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Nova
+                </Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Criar Nova Categoria</DialogTitle>
+                    <DialogDescription>Adicione uma nova categoria para organizar suas transações.</DialogDescription>
+                </DialogHeader>
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                        <FormField
+                            control={form.control}
+                            name="newCategoryName"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Nome da Categoria</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="Ex: Streaming" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="newCategoryIcon"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Ícone</FormLabel>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Selecione um ícone" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            {availableIcons.map((icon) => {
+                                                const Icon = icon.icon;
+                                                return (
+                                                    <SelectItem key={icon.name} value={icon.name}>
+                                                        <div className="flex items-center gap-2">
+                                                            <Icon className="h-4 w-4" />
+                                                            {icon.name}
+                                                        </div>
+                                                    </SelectItem>
+                                                );
+                                            })}
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <DialogFooter>
+                            <DialogClose asChild>
+                                <Button type="button" variant="ghost">Cancelar</Button>
+                            </DialogClose>
+                            <Button type="submit">Salvar Categoria</Button>
+                        </DialogFooter>
+                    </form>
+                </Form>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+
 export default function TransactionsPage() {
   const [availableCategories, setAvailableCategories] =
     React.useState<Category[]>(initialCategories);
   const [transactions, setTransactions] = React.useState<TransactionFormValues[]>([]);
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const [isTransactionDialogOpen, setIsTransactionDialogOpen] = React.useState(false);
 
   const form = useForm<TransactionFormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(transactionSchema),
     defaultValues: {
       amount: 0,
       type: "expense",
       date: new Date(),
       isRecurring: false,
       category: "",
-      newCategory: "",
-      newCategoryIcon: "Tag",
       notes: "",
       description: "",
     },
   });
 
-  const categoryValue = form.watch("category");
+  const handleAddCategory = (newCategory: Category) => {
+    if (!availableCategories.find(c => c.name === newCategory.name)) {
+        setAvailableCategories(prev => [...prev, newCategory]);
+    }
+  }
 
   function onSubmit(data: TransactionFormValues) {
-    let finalCategory = data.category;
-    if (data.category === "new" && data.newCategory && data.newCategoryIcon) {
-      finalCategory = data.newCategory;
-      const IconComponent = availableIcons.find(i => i.name === data.newCategoryIcon)?.icon || Tag;
-      if (!availableCategories.find(c => c.name === finalCategory)) {
-        setAvailableCategories((prev) => [...prev, { name: finalCategory, icon: IconComponent }]);
-      }
-    }
-    
-    const newTransaction = { ...data, category: finalCategory };
-    setTransactions(prev => [newTransaction, ...prev]);
+    setTransactions(prev => [data, ...prev]);
 
     toast({
       title: "Transação Adicionada!",
       description: `Sua transação de ${formatCurrency(data.amount)} foi registrada.`,
     });
     form.reset();
-    setIsDialogOpen(false);
+    setIsTransactionDialogOpen(false);
   }
 
   const getCategoryIcon = (categoryName: string) => {
@@ -197,7 +289,7 @@ export default function TransactionsPage() {
     <div className="flex flex-col gap-8">
         <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold tracking-tight">Transações</h1>
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <Dialog open={isTransactionDialogOpen} onOpenChange={setIsTransactionDialogOpen}>
                 <DialogTrigger asChild>
                     <Button>
                         <PlusCircle className="mr-2 h-4 w-4" />
@@ -342,111 +434,49 @@ export default function TransactionsPage() {
                                     )}
                                     />
                             </div>
-                            
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
-                                <FormField
-                                control={form.control}
-                                name="category"
-                                render={({ field }) => (
-                                    <FormItem>
-                                    <FormLabel>
-                                        <div className="flex items-center gap-2">
-                                        <Tag className="h-4 w-4" /> Categoria
+                            <FormItem>
+                                <FormLabel>
+                                    <div className="flex items-center gap-2">
+                                    <Tag className="h-4 w-4" /> Categoria
+                                    </div>
+                                </FormLabel>
+                                <div className="flex gap-2">
+                                    <FormField
+                                    control={form.control}
+                                    name="category"
+                                    render={({ field }) => (
+                                        <div className="flex-grow">
+                                            <Select
+                                                onValueChange={field.onChange}
+                                                defaultValue={field.value}
+                                            >
+                                                <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Selecione uma categoria" />
+                                                </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                {availableCategories.map((cat) => {
+                                                    const Icon = cat.icon;
+                                                    return (
+                                                        <SelectItem key={cat.name} value={cat.name}>
+                                                            <div className="flex items-center gap-2">
+                                                                <Icon className="h-4 w-4" />
+                                                                {cat.name}
+                                                            </div>
+                                                        </SelectItem>
+                                                    )
+                                                })}
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage className="mt-2" />
                                         </div>
-                                    </FormLabel>
-                                    <Select
-                                        onValueChange={field.onChange}
-                                        defaultValue={field.value}
-                                    >
-                                        <FormControl>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Selecione uma categoria" />
-                                        </SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                        {availableCategories.map((cat) => {
-                                            const Icon = cat.icon;
-                                            return (
-                                                <SelectItem key={cat.name} value={cat.name}>
-                                                    <div className="flex items-center gap-2">
-                                                        <Icon className="h-4 w-4" />
-                                                        {cat.name}
-                                                    </div>
-                                                </SelectItem>
-                                            )
-                                        })}
-                                        <SelectItem value="new">
-                                            <div className="flex items-center gap-2">
-                                            <PlusCircle className="h-4 w-4" />
-                                            Criar nova categoria
-                                            </div>
-                                        </SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                    </FormItem>
-                                )}
-                                />
-                                 {categoryValue === "new" && (
-                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:col-span-2 p-4 border rounded-md bg-muted/50">
-                                    <FormField
-                                        control={form.control}
-                                        name="newCategory"
-                                        render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>
-                                            <div className="flex items-center gap-2">
-                                                <PlusCircle className="h-4 w-4" /> Nome da Nova Categoria
-                                            </div>
-                                            </FormLabel>
-                                            <FormControl>
-                                            <Input
-                                                placeholder="Ex: Streaming"
-                                                {...field}
-                                            />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                        )}
+                                    )}
                                     />
-                                    <FormField
-                                        control={form.control}
-                                        name="newCategoryIcon"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>
-                                                    <div className="flex items-center gap-2">
-                                                        <Tag className="h-4 w-4" /> Ícone da Categoria
-                                                    </div>
-                                                </FormLabel>
-                                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                    <FormControl>
-                                                        <SelectTrigger>
-                                                            <SelectValue placeholder="Selecione um ícone" />
-                                                        </SelectTrigger>
-                                                    </FormControl>
-                                                    <SelectContent>
-                                                        {availableIcons.map((icon) => {
-                                                            const Icon = icon.icon;
-                                                            return (
-                                                                <SelectItem key={icon.name} value={icon.name}>
-                                                                    <div className="flex items-center gap-2">
-                                                                        <Icon className="h-4 w-4" />
-                                                                        {icon.name}
-                                                                    </div>
-                                                                </SelectItem>
-                                                            );
-                                                        })}
-                                                    </SelectContent>
-                                                </Select>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
+                                    <AddCategoryDialog onCategoryAdded={handleAddCategory} />
                                 </div>
-                                )}
-                            </div>
+                            </FormItem>
                             
                             <FormField
                                 control={form.control}
