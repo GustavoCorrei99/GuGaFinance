@@ -37,6 +37,24 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+    DialogClose,
+    DialogFooter
+  } from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { toast } from "@/hooks/use-toast";
 import {
   DollarSign,
@@ -49,10 +67,13 @@ import {
   Film,
   Home,
   Building,
+  ArrowDownCircle,
+  ArrowUpCircle
 } from "lucide-react";
 import { Category } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
-const categories: Category[] = [
+const initialCategories: Category[] = [
   "Moradia",
   "Alimentação",
   "Transporte",
@@ -66,7 +87,7 @@ const categories: Category[] = [
   "Outros",
 ];
 
-const categoryIcons: Record<Category, React.ElementType> = {
+const categoryIcons: Record<string, React.ElementType> = {
   Moradia: Home,
   Alimentação: DollarSign,
   Transporte: Building,
@@ -87,13 +108,24 @@ const formSchema = z.object({
   category: z.string().min(1, "A categoria é obrigatória."),
   newCategory: z.string().optional(),
   notes: z.string().optional(),
+  description: z.string().min(1, "A descrição é obrigatória."),
 });
 
 type TransactionFormValues = z.infer<typeof formSchema>;
 
+const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(value);
+};
+
 export default function TransactionsPage() {
   const [availableCategories, setAvailableCategories] =
-    React.useState<string[]>(categories);
+    React.useState<string[]>(initialCategories);
+  const [transactions, setTransactions] = React.useState<TransactionFormValues[]>([]);
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+
   const form = useForm<TransactionFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -103,6 +135,7 @@ export default function TransactionsPage() {
       category: "",
       newCategory: "",
       notes: "",
+      description: "",
     },
   });
 
@@ -117,211 +150,298 @@ export default function TransactionsPage() {
       }
     }
     
+    const newTransaction = { ...data, category: finalCategory };
+    setTransactions(prev => [newTransaction, ...prev]);
+
     toast({
       title: "Transação Adicionada!",
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">
-            {JSON.stringify({ ...data, category: finalCategory }, null, 2)}
-          </code>
-        </pre>
-      ),
+      description: `Sua transação de ${formatCurrency(data.amount)} foi registrada.`,
     });
     form.reset();
+    setIsDialogOpen(false);
   }
 
   return (
     <div className="flex flex-col gap-8">
-      <h1 className="text-3xl font-bold tracking-tight">Transações</h1>
-      <Card>
-        <CardHeader>
-          <CardTitle>Adicionar Nova Transação</CardTitle>
-          <CardDescription>
-            Registre suas receitas e despesas para manter o controle.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <FormField
-                  control={form.control}
-                  name="amount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        <div className="flex items-center gap-2">
-                          <DollarSign className="h-4 w-4" /> Valor
-                        </div>
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          placeholder="0,00"
-                          {...field}
-                          step="0.01"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="type"
-                  render={({ field }) => (
-                    <FormItem>
-                       <FormLabel>
-                        <div className="flex items-center gap-2">
-                          <ArrowDown className="h-4 w-4" /> Tipo de Transação
-                        </div>
-                      </FormLabel>
-                      <FormControl>
-                        <RadioGroup
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                          className="flex items-center space-x-4 pt-2"
-                        >
-                          <FormItem className="flex items-center space-x-2">
-                            <FormControl>
-                              <RadioGroupItem value="expense" id="expense" />
-                            </FormControl>
-                            <FormLabel htmlFor="expense" className="font-normal">
-                              Despesa
-                            </FormLabel>
-                          </FormItem>
-                          <FormItem className="flex items-center space-x-2">
-                            <FormControl>
-                              <RadioGroupItem value="income" id="income" />
-                            </FormControl>
-                            <FormLabel htmlFor="income" className="font-normal">
-                              Receita
-                            </FormLabel>
-                          </FormItem>
-                        </RadioGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <FormField
-                  control={form.control}
-                  name="category"
-                  render={({ field }) => (
-                    <FormItem>
-                       <FormLabel>
-                        <div className="flex items-center gap-2">
-                          <Tag className="h-4 w-4" /> Categoria
-                        </div>
-                      </FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione uma categoria" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {availableCategories.map((cat) => (
-                            <SelectItem key={cat} value={cat}>
-                              {cat}
-                            </SelectItem>
-                          ))}
-                          <SelectItem value="new">
-                            <div className="flex items-center gap-2">
-                              <PlusCircle className="h-4 w-4" />
-                              Criar nova categoria
+        <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold tracking-tight">Transações</h1>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                    <Button>
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Adicionar Transação
+                    </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Adicionar Nova Transação</DialogTitle>
+                        <DialogDescription>
+                        Registre suas receitas e despesas para manter o controle.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <FormField
+                                control={form.control}
+                                name="description"
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormLabel>
+                                        <div className="flex items-center gap-2">
+                                        <Text className="h-4 w-4" /> Descrição
+                                        </div>
+                                    </FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="Ex: Conta de luz" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="amount"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                        <FormLabel>
+                                            <div className="flex items-center gap-2">
+                                            <DollarSign className="h-4 w-4" /> Valor
+                                            </div>
+                                        </FormLabel>
+                                        <FormControl>
+                                            <Input
+                                            type="number"
+                                            placeholder="0,00"
+                                            {...field}
+                                            step="0.01"
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
                             </div>
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
 
-                {categoryValue === "new" && (
-                  <FormField
-                    control={form.control}
-                    name="newCategory"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          <div className="flex items-center gap-2">
-                            <PlusCircle className="h-4 w-4" /> Nova Categoria
-                          </div>
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Ex: Streaming, Mercado"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
-              </div>
-              
-              <FormField
-                control={form.control}
-                name="notes"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      <div className="flex items-center gap-2">
-                        <Text className="h-4 w-4" /> Observação (Opcional)
-                      </div>
-                    </FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Adicione uma nota para esta transação..."
-                        className="resize-none"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                            <FormField
+                                control={form.control}
+                                name="type"
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormLabel>
+                                        <div className="flex items-center gap-2">
+                                        <ArrowDown className="h-4 w-4" /> Tipo de Transação
+                                        </div>
+                                    </FormLabel>
+                                    <FormControl>
+                                        <RadioGroup
+                                        onValueChange={field.onChange}
+                                        defaultValue={field.value}
+                                        className="flex items-center space-x-4 pt-2"
+                                        >
+                                        <FormItem className="flex items-center space-x-2">
+                                            <FormControl>
+                                            <RadioGroupItem value="expense" id="expense" />
+                                            </FormControl>
+                                            <FormLabel htmlFor="expense" className="font-normal">
+                                            Despesa
+                                            </FormLabel>
+                                        </FormItem>
+                                        <FormItem className="flex items-center space-x-2">
+                                            <FormControl>
+                                            <RadioGroupItem value="income" id="income" />
+                                            </FormControl>
+                                            <FormLabel htmlFor="income" className="font-normal">
+                                            Receita
+                                            </FormLabel>
+                                        </FormItem>
+                                        </RadioGroup>
+                                    </FormControl>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                                />
 
-              <FormField
-                control={form.control}
-                name="isRecurring"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base">
-                        <div className="flex items-center gap-2">
-                          <Repeat className="h-4 w-4" /> Transação Recorrente
-                        </div>
-                      </FormLabel>
-                      <FormDescription>
-                        Marque se esta transação se repete mensalmente.
-                      </FormDescription>
-                    </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <FormField
+                                control={form.control}
+                                name="category"
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormLabel>
+                                        <div className="flex items-center gap-2">
+                                        <Tag className="h-4 w-4" /> Categoria
+                                        </div>
+                                    </FormLabel>
+                                    <Select
+                                        onValueChange={field.onChange}
+                                        defaultValue={field.value}
+                                    >
+                                        <FormControl>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Selecione uma categoria" />
+                                        </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                        {availableCategories.map((cat) => (
+                                            <SelectItem key={cat} value={cat}>
+                                            {cat}
+                                            </SelectItem>
+                                        ))}
+                                        <SelectItem value="new">
+                                            <div className="flex items-center gap-2">
+                                            <PlusCircle className="h-4 w-4" />
+                                            Criar nova categoria
+                                            </div>
+                                        </SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                                />
 
-              <Button type="submit" className="w-full md:w-auto">Adicionar Transação</Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+                                {categoryValue === "new" && (
+                                <FormField
+                                    control={form.control}
+                                    name="newCategory"
+                                    render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>
+                                        <div className="flex items-center gap-2">
+                                            <PlusCircle className="h-4 w-4" /> Nova Categoria
+                                        </div>
+                                        </FormLabel>
+                                        <FormControl>
+                                        <Input
+                                            placeholder="Ex: Streaming, Mercado"
+                                            {...field}
+                                        />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                    )}
+                                />
+                                )}
+                            </div>
+                            
+                            <FormField
+                                control={form.control}
+                                name="notes"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>
+                                    <div className="flex items-center gap-2">
+                                        <Text className="h-4 w-4" /> Observação (Opcional)
+                                    </div>
+                                    </FormLabel>
+                                    <FormControl>
+                                    <Textarea
+                                        placeholder="Adicione uma nota para esta transação..."
+                                        className="resize-none"
+                                        {...field}
+                                    />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="isRecurring"
+                                render={({ field }) => (
+                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                                    <div className="space-y-0.5">
+                                    <FormLabel className="text-base">
+                                        <div className="flex items-center gap-2">
+                                        <Repeat className="h-4 w-4" /> Transação Recorrente
+                                        </div>
+                                    </FormLabel>
+                                    <FormDescription>
+                                        Marque se esta transação se repete mensalmente.
+                                    </FormDescription>
+                                    </div>
+                                    <FormControl>
+                                    <Switch
+                                        checked={field.value}
+                                        onCheckedChange={field.onChange}
+                                    />
+                                    </FormControl>
+                                </FormItem>
+                                )}
+                            />
+                            <DialogFooter>
+                                <DialogClose asChild>
+                                    <Button type="button" variant="ghost">Cancelar</Button>
+                                </DialogClose>
+                                <Button type="submit">Adicionar Transação</Button>
+                            </DialogFooter>
+                        </form>
+                    </Form>
+                </DialogContent>
+            </Dialog>
+        </div>
+        
+        <Card>
+            <CardHeader>
+                <CardTitle>Histórico de Transações</CardTitle>
+                <CardDescription>
+                    Veja abaixo a lista de todas as suas transações registradas.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Descrição</TableHead>
+                            <TableHead>Categoria</TableHead>
+                            <TableHead className="text-right">Valor</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {transactions.length > 0 ? (
+                            transactions.map((transaction, index) => (
+                            <TableRow key={index}>
+                                <TableCell>
+                                <div className="flex items-center gap-2">
+                                    {transaction.type === 'income' ? (
+                                    <ArrowUpCircle className="h-5 w-5 text-green-500" />
+                                    ) : (
+                                    <ArrowDownCircle className="h-5 w-5 text-red-500" />
+                                    )}
+                                    <div className="font-medium">{transaction.description}</div>
+                                </div>
+                                </TableCell>
+                                <TableCell>
+                                    <div className="text-sm text-muted-foreground">{transaction.category}</div>
+                                </TableCell>
+                                <TableCell
+                                className={cn(
+                                    "text-right font-semibold",
+                                    transaction.type === "income"
+                                    ? "text-green-600"
+                                    : "text-slate-800 dark:text-slate-300"
+                                )}
+                                >
+                                {transaction.type === "income" ? "+" : "-"}
+                                {formatCurrency(transaction.amount)}
+                                </TableCell>
+                            </TableRow>
+                            ))
+                        ) : (
+                            <TableRow>
+                                <TableCell colSpan={3} className="text-center h-24">
+                                    Nenhuma transação registrada ainda.
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </CardContent>
+        </Card>
     </div>
   );
 }
+
+    
