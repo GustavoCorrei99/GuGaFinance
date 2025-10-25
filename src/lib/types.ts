@@ -11,7 +11,10 @@ export type Category =
   | 'Salário' 
   | 'Trabalho Extra' 
   | 'Investimento'
-  | 'Outros';
+  | 'Outros'
+  | 'Streaming'
+  | 'Casa'
+  | 'Aluguel';
 
 export type Transaction = {
   id: string;

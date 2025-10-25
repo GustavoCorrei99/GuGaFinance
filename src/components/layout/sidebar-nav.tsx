@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -9,7 +10,7 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import {
-  LayoutDashboard,
+  Home,
   ArrowLeftRight,
   Wallet as WalletIcon,
   CircleDollarSign,
@@ -24,7 +25,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/", label: "Painel", icon: LayoutDashboard },
+  { href: "/", label: "Home", icon: Home },
   { href: "/transactions", label: "Transações", icon: ArrowLeftRight },
   { href: "/accounts", label: "Contas", icon: WalletIcon },
   { href: "/budgets", label: "Orçamentos", icon: CircleDollarSign },
