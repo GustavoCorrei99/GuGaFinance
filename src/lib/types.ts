@@ -1,17 +1,17 @@
 export type TransactionType = 'income' | 'expense';
 
 export type Category = 
-  | 'Housing' 
-  | 'Food' 
-  | 'Transport' 
-  | 'Health' 
-  | 'Leisure' 
-  | 'Education' 
-  | 'Taxes' 
-  | 'Salary' 
-  | 'Side Job' 
-  | 'Investment'
-  | 'Other';
+  | 'Moradia' 
+  | 'Alimentação' 
+  | 'Transporte' 
+  | 'Saúde' 
+  | 'Lazer' 
+  | 'Educação' 
+  | 'Impostos' 
+  | 'Salário' 
+  | 'Trabalho Extra' 
+  | 'Investimento'
+  | 'Outros';
 
 export type Transaction = {
   id: string;
@@ -23,7 +23,7 @@ export type Transaction = {
   account: string;
 };
 
-export type AccountType = 'Bank' | 'Wallet' | 'Credit Card' | 'Savings' | 'Investment';
+export type AccountType = 'Banco' | 'Carteira' | 'Cartão de Crédito' | 'Poupança' | 'Investimento';
 
 export type Account = {
   id: string;

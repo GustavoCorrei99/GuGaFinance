@@ -24,12 +24,12 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/transactions", label: "Transactions", icon: ArrowLeftRight },
-  { href: "/accounts", label: "Accounts", icon: WalletIcon },
-  { href: "/budgets", label: "Budgets", icon: CircleDollarSign },
-  { href: "/goals", label: "Goals", icon: Target },
-  { href: "/reports", label: "Reports", icon: LineChart },
+  { href: "/", label: "Painel", icon: LayoutDashboard },
+  { href: "/transactions", label: "Transações", icon: ArrowLeftRight },
+  { href: "/accounts", label: "Contas", icon: WalletIcon },
+  { href: "/budgets", label: "Orçamentos", icon: CircleDollarSign },
+  { href: "/goals", label: "Metas", icon: Target },
+  { href: "/reports", label: "Relatórios", icon: LineChart },
 ];
 
 export function SidebarNav() {
@@ -70,11 +70,11 @@ export function SidebarNav() {
           <SidebarMenuItem>
             <SidebarMenuButton className="w-full justify-start" variant="ghost">
               <Settings className="h-5 w-5" />
-              <span>Settings</span>
+              <span>Configurações</span>
             </SidebarMenuButton>
             <SidebarMenuButton className="w-full justify-start" variant="ghost">
               <HelpCircle className="h-5 w-5" />
-              <span>Help</span>
+              <span>Ajuda</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </div>

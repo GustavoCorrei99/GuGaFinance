@@ -13,9 +13,9 @@ interface FinancialGoalsProps {
 }
 
 const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("pt-BR", {
       style: "currency",
-      currency: "USD",
+      currency: "BRL",
       maximumFractionDigits: 0,
     }).format(value);
 };
@@ -24,8 +24,8 @@ export function FinancialGoals({ goals }: FinancialGoalsProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Financial Goals</CardTitle>
-        <CardDescription>Track your progress towards your savings goals.</CardDescription>
+        <CardTitle>Metas Financeiras</CardTitle>
+        <CardDescription>Acompanhe seu progresso em direção às suas metas de economia.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {goals.map((goal) => {

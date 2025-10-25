@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table";
 import type { Transaction } from "@/lib/types";
 import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { ArrowDownCircle, ArrowUpCircle } from "lucide-react";
 
@@ -23,9 +24,9 @@ interface RecentTransactionsProps {
 }
 
 const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("pt-BR", {
       style: "currency",
-      currency: "USD",
+      currency: "BRL",
     }).format(value);
   };
 
@@ -33,16 +34,16 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Recent Transactions</CardTitle>
-        <CardDescription>Your 5 most recent transactions.</CardDescription>
+        <CardTitle>Transações Recentes</CardTitle>
+        <CardDescription>Suas 5 transações mais recentes.</CardDescription>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Description</TableHead>
-              <TableHead className="text-right">Amount</TableHead>
-              <TableHead className="hidden md:table-cell text-right">Date</TableHead>
+              <TableHead>Descrição</TableHead>
+              <TableHead className="text-right">Valor</TableHead>
+              <TableHead className="hidden md:table-cell text-right">Data</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -73,7 +74,7 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
                   {formatCurrency(transaction.amount)}
                 </TableCell>
                 <TableCell className="hidden md:table-cell text-right text-muted-foreground">
-                    {format(transaction.date, "MMM dd, yyyy")}
+                    {format(transaction.date, "dd MMM, yyyy", { locale: ptBR })}
                 </TableCell>
               </TableRow>
             ))}

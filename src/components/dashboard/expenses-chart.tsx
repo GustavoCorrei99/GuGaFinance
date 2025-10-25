@@ -28,8 +28,8 @@ export function ExpensesChart({ transactions }: ExpensesChartProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Expenses by Category</CardTitle>
-        <CardDescription>A breakdown of your spending this month.</CardDescription>
+        <CardTitle>Despesas por Categoria</CardTitle>
+        <CardDescription>Uma análise detalhada dos seus gastos neste mês.</CardDescription>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={350}>
@@ -51,7 +51,7 @@ export function ExpensesChart({ transactions }: ExpensesChartProps) {
                     border: '1px solid hsl(var(--border))',
                     borderRadius: 'var(--radius)',
                 }}
-                formatter={(value) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value as number)}
+                formatter={(value) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value as number)}
             />
             <Bar dataKey="total" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
           </BarChart>

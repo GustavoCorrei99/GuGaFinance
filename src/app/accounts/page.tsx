@@ -5,17 +5,17 @@ import { cn } from "@/lib/utils";
 import { AccountType } from "@/lib/types";
 
 const accountIcons: Record<AccountType, React.ElementType> = {
-  Bank: Landmark,
-  Wallet: Wallet,
-  "Credit Card": CreditCard,
-  Savings: PiggyBank,
-  Investment: Banknote,
+  Banco: Landmark,
+  Carteira: Wallet,
+  "Cartão de Crédito": CreditCard,
+  Poupança: PiggyBank,
+  Investimento: Banknote,
 };
 
 const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat("pt-BR", {
     style: "currency",
-    currency: "USD",
+    currency: "BRL",
   }).format(value);
 };
 
@@ -25,7 +25,7 @@ export default function AccountsPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <h1 className="text-3xl font-bold tracking-tight">Accounts & Wallets</h1>
+      <h1 className="text-3xl font-bold tracking-tight">Contas e Carteiras</h1>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {accounts.map((account) => {
           const Icon = accountIcons[account.type];

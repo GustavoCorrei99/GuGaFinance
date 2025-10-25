@@ -3,14 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 export default function ReportsPage() {
   return (
     <div className="flex flex-col gap-8">
-      <h1 className="text-3xl font-bold tracking-tight">Reports</h1>
+      <h1 className="text-3xl font-bold tracking-tight">Relatórios</h1>
       <Card>
         <CardHeader>
-          <CardTitle>Financial Reports</CardTitle>
-          <CardDescription>Detailed reports and visualizations will be available here.</CardDescription>
+          <CardTitle>Relatórios Financeiros</CardTitle>
+          <CardDescription>Relatórios detalhados e visualizações estarão disponíveis aqui.</CardDescription>
         </CardHeader>
         <CardContent>
-          <p>Coming soon!</p>
+          <p>Em breve!</p>
         </CardContent>
       </Card>
     </div>

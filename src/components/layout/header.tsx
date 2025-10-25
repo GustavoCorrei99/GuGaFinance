@@ -27,7 +27,7 @@ export function Header() {
         onClick={toggleSidebar}
       >
         <Menu className="h-6 w-6" />
-        <span className="sr-only">Toggle Sidebar</span>
+        <span className="sr-only">Alternar Barra Lateral</span>
       </Button>
 
       <div className="flex items-center gap-2 md:hidden">
@@ -49,24 +49,24 @@ export function Header() {
                     data-ai-hint={userAvatar.imageHint}
                   />
                 )}
-                <AvatarFallback>GG</AvatarFallback>
+                <AvatarFallback>GU</AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56" align="end" forceMount>
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">GuGa User</p>
+                <p className="text-sm font-medium leading-none">Usuário GuGa</p>
                 <p className="text-xs leading-none text-muted-foreground">
-                  guga@example.com
+                  guga@exemplo.com
                 </p>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Profile</DropdownMenuItem>
-            <DropdownMenuItem>Settings</DropdownMenuItem>
+            <DropdownMenuItem>Perfil</DropdownMenuItem>
+            <DropdownMenuItem>Configurações</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Log out</DropdownMenuItem>
+            <DropdownMenuItem>Sair</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

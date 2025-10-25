@@ -3,9 +3,9 @@ import { getBudgets } from "@/lib/data";
 import { Progress } from "@/components/ui/progress";
 
 const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat("pt-BR", {
     style: "currency",
-    currency: "USD",
+    currency: "BRL",
   }).format(value);
 };
 
@@ -13,11 +13,11 @@ export default function BudgetsPage() {
   const budgets = getBudgets();
   return (
     <div className="flex flex-col gap-8">
-      <h1 className="text-3xl font-bold tracking-tight">Monthly Budgets</h1>
+      <h1 className="text-3xl font-bold tracking-tight">Orçamentos Mensais</h1>
       <Card>
         <CardHeader>
-          <CardTitle>Spending Limits</CardTitle>
-          <CardDescription>Track your spending against your monthly budget for each category.</CardDescription>
+          <CardTitle>Limites de Gastos</CardTitle>
+          <CardDescription>Acompanhe seus gastos em relação ao seu orçamento mensal para cada categoria.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {budgets.map((budget) => {

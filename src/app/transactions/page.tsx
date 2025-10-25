@@ -3,13 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export default function TransactionsPage() {
   return (
     <div className="flex flex-col gap-8">
-      <h1 className="text-3xl font-bold tracking-tight">Transactions</h1>
+      <h1 className="text-3xl font-bold tracking-tight">Transações</h1>
       <Card>
         <CardHeader>
-          <CardTitle>All Transactions</CardTitle>
+          <CardTitle>Todas as Transações</CardTitle>
         </CardHeader>
         <CardContent>
-          <p>Transaction management will be implemented here.</p>
+          <p>A gestão de transações será implementada aqui.</p>
         </CardContent>
       </Card>
     </div>

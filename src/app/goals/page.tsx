@@ -3,14 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 export default function GoalsPage() {
   return (
     <div className="flex flex-col gap-8">
-      <h1 className="text-3xl font-bold tracking-tight">Financial Goals</h1>
+      <h1 className="text-3xl font-bold tracking-tight">Metas Financeiras</h1>
        <Card>
         <CardHeader>
-          <CardTitle>Your Goals</CardTitle>
-          <CardDescription>Goal planning and tracking will be implemented here.</CardDescription>
+          <CardTitle>Suas Metas</CardTitle>
+          <CardDescription>O planejamento e o acompanhamento de metas serão implementados aqui.</CardDescription>
         </CardHeader>
         <CardContent>
-          <p>Coming soon!</p>
+          <p>Em breve!</p>
         </CardContent>
       </Card>
     </div>
