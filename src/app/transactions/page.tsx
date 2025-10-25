@@ -388,64 +388,63 @@ export default function TransactionsPage() {
                                     </FormItem>
                                 )}
                                 />
-
-                                {categoryValue === "new" && (
-                                    <>
-                                        <FormField
-                                            control={form.control}
-                                            name="newCategory"
-                                            render={({ field }) => (
+                                 {categoryValue === "new" && (
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:col-span-2 p-4 border rounded-md bg-muted/50">
+                                    <FormField
+                                        control={form.control}
+                                        name="newCategory"
+                                        render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>
+                                            <div className="flex items-center gap-2">
+                                                <PlusCircle className="h-4 w-4" /> Nome da Nova Categoria
+                                            </div>
+                                            </FormLabel>
+                                            <FormControl>
+                                            <Input
+                                                placeholder="Ex: Streaming"
+                                                {...field}
+                                            />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="newCategoryIcon"
+                                        render={({ field }) => (
                                             <FormItem>
                                                 <FormLabel>
-                                                <div className="flex items-center gap-2">
-                                                    <PlusCircle className="h-4 w-4" /> Nome da Nova Categoria
-                                                </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <Tag className="h-4 w-4" /> Ícone da Categoria
+                                                    </div>
                                                 </FormLabel>
-                                                <FormControl>
-                                                <Input
-                                                    placeholder="Ex: Streaming"
-                                                    {...field}
-                                                />
-                                                </FormControl>
+                                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                    <FormControl>
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="Selecione um ícone" />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent>
+                                                        {availableIcons.map((icon) => {
+                                                            const Icon = icon.icon;
+                                                            return (
+                                                                <SelectItem key={icon.name} value={icon.name}>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <Icon className="h-4 w-4" />
+                                                                        {icon.name}
+                                                                    </div>
+                                                                </SelectItem>
+                                                            );
+                                                        })}
+                                                    </SelectContent>
+                                                </Select>
                                                 <FormMessage />
                                             </FormItem>
-                                            )}
-                                        />
-                                        <FormField
-                                            control={form.control}
-                                            name="newCategoryIcon"
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel>
-                                                        <div className="flex items-center gap-2">
-                                                            <Tag className="h-4 w-4" /> Ícone da Categoria
-                                                        </div>
-                                                    </FormLabel>
-                                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                        <FormControl>
-                                                            <SelectTrigger>
-                                                                <SelectValue placeholder="Selecione um ícone" />
-                                                            </SelectTrigger>
-                                                        </FormControl>
-                                                        <SelectContent>
-                                                            {availableIcons.map((icon) => {
-                                                                const Icon = icon.icon;
-                                                                return (
-                                                                    <SelectItem key={icon.name} value={icon.name}>
-                                                                        <div className="flex items-center gap-2">
-                                                                            <Icon className="h-4 w-4" />
-                                                                            {icon.name}
-                                                                        </div>
-                                                                    </SelectItem>
-                                                                );
-                                                            })}
-                                                        </SelectContent>
-                                                    </Select>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-                                    </>
+                                        )}
+                                    />
+                                </div>
                                 )}
                             </div>
                             
@@ -577,5 +576,3 @@ export default function TransactionsPage() {
     </div>
   );
 }
-
-    
