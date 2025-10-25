@@ -5,6 +5,8 @@ import * as React from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import {
   Card,
   CardContent,
@@ -28,6 +30,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Form,
   FormControl,
@@ -55,6 +62,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Calendar } from "@/components/ui/calendar";
 import { toast } from "@/hooks/use-toast";
 import {
   DollarSign,
@@ -68,45 +76,61 @@ import {
   Home,
   Building,
   ArrowDownCircle,
-  ArrowUpCircle
+  ArrowUpCircle,
+  Calendar as CalendarIcon,
+  Car,
+  Heart,
+  BookOpen,
+  Landmark,
+  Briefcase,
+  TrendingUp,
+  MoreHorizontal
 } from "lucide-react";
-import { Category } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
+type Category = {
+    name: string;
+    icon: React.ElementType;
+};
+
 const initialCategories: Category[] = [
-  "Moradia",
-  "Alimentação",
-  "Transporte",
-  "Saúde",
-  "Lazer",
-  "Educação",
-  "Impostos",
-  "Salário",
-  "Trabalho Extra",
-  "Investimento",
-  "Outros",
+  { name: "Moradia", icon: Home },
+  { name: "Alimentação", icon: DollarSign },
+  { name: "Transporte", icon: Car },
+  { name: "Saúde", icon: Heart },
+  { name: "Lazer", icon: Film },
+  { name: "Educação", icon: BookOpen },
+  { name: "Impostos", icon: Landmark },
+  { name: "Salário", icon: Briefcase },
+  { name: "Trabalho Extra", icon: TrendingUp },
+  { name: "Investimento", icon: ArrowUp },
+  { name: "Outros", icon: Tag },
 ];
 
-const categoryIcons: Record<string, React.ElementType> = {
-  Moradia: Home,
-  Alimentação: DollarSign,
-  Transporte: Building,
-  Saúde: PlusCircle,
-  Lazer: Film,
-  Educação: Home,
-  Impostos: DollarSign,
-  Salário: DollarSign,
-  "Trabalho Extra": DollarSign,
-  Investimento: ArrowUp,
-  Outros: Tag,
-};
+const availableIcons = [
+    { name: "Moradia", icon: Home },
+    { name: "Alimentação", icon: DollarSign },
+    { name: "Transporte", icon: Car },
+    { name: "Saúde", icon: Heart },
+    { name: "Lazer", icon: Film },
+    { name: "Educação", icon: BookOpen },
+    { name: "Impostos", icon: Landmark },
+    { name: "Salário", icon: Briefcase },
+    { name: "Trabalho Extra", icon: TrendingUp },
+    { name: "Investimento", icon: ArrowUp },
+    { name: "Outros", icon: Tag },
+    { name: "Prédio", icon: Building },
+    { name: "Mais", icon: MoreHorizontal },
+];
 
 const formSchema = z.object({
   amount: z.coerce.number().min(0.01, "O valor deve ser maior que zero."),
   type: z.enum(["income", "expense"]),
+  date: z.date({ required_error: "A data é obrigatória."}),
   isRecurring: z.boolean().default(false),
   category: z.string().min(1, "A categoria é obrigatória."),
   newCategory: z.string().optional(),
+  newCategoryIcon: z.string().optional(),
   notes: z.string().optional(),
   description: z.string().min(1, "A descrição é obrigatória."),
 });
@@ -122,7 +146,7 @@ const formatCurrency = (value: number) => {
 
 export default function TransactionsPage() {
   const [availableCategories, setAvailableCategories] =
-    React.useState<string[]>(initialCategories);
+    React.useState<Category[]>(initialCategories);
   const [transactions, setTransactions] = React.useState<TransactionFormValues[]>([]);
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
 
@@ -131,9 +155,11 @@ export default function TransactionsPage() {
     defaultValues: {
       amount: 0,
       type: "expense",
+      date: new Date(),
       isRecurring: false,
       category: "",
       newCategory: "",
+      newCategoryIcon: "Tag",
       notes: "",
       description: "",
     },
@@ -143,10 +169,11 @@ export default function TransactionsPage() {
 
   function onSubmit(data: TransactionFormValues) {
     let finalCategory = data.category;
-    if (data.category === "new" && data.newCategory) {
+    if (data.category === "new" && data.newCategory && data.newCategoryIcon) {
       finalCategory = data.newCategory;
-      if (!availableCategories.includes(finalCategory)) {
-        setAvailableCategories((prev) => [...prev, finalCategory]);
+      const IconComponent = availableIcons.find(i => i.name === data.newCategoryIcon)?.icon || Tag;
+      if (!availableCategories.find(c => c.name === finalCategory)) {
+        setAvailableCategories((prev) => [...prev, { name: finalCategory, icon: IconComponent }]);
       }
     }
     
@@ -159,6 +186,11 @@ export default function TransactionsPage() {
     });
     form.reset();
     setIsDialogOpen(false);
+  }
+
+  const getCategoryIcon = (categoryName: string) => {
+    const category = availableCategories.find(c => c.name === categoryName);
+    return category ? category.icon : Tag;
   }
 
   return (
@@ -223,46 +255,96 @@ export default function TransactionsPage() {
                                 />
                             </div>
 
-                            <FormField
-                                control={form.control}
-                                name="type"
-                                render={({ field }) => (
-                                    <FormItem>
-                                    <FormLabel>
-                                        <div className="flex items-center gap-2">
-                                        <ArrowDown className="h-4 w-4" /> Tipo de Transação
-                                        </div>
-                                    </FormLabel>
-                                    <FormControl>
-                                        <RadioGroup
-                                        onValueChange={field.onChange}
-                                        defaultValue={field.value}
-                                        className="flex items-center space-x-4 pt-2"
-                                        >
-                                        <FormItem className="flex items-center space-x-2">
-                                            <FormControl>
-                                            <RadioGroupItem value="expense" id="expense" />
-                                            </FormControl>
-                                            <FormLabel htmlFor="expense" className="font-normal">
-                                            Despesa
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <FormField
+                                    control={form.control}
+                                    name="date"
+                                    render={({ field }) => (
+                                        <FormItem className="flex flex-col">
+                                            <FormLabel>
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <CalendarIcon className="h-4 w-4" /> Data da Transação
+                                                </div>
                                             </FormLabel>
+                                            <Popover>
+                                                <PopoverTrigger asChild>
+                                                <FormControl>
+                                                    <Button
+                                                    variant={"outline"}
+                                                    className={cn(
+                                                        "pl-3 text-left font-normal",
+                                                        !field.value && "text-muted-foreground"
+                                                    )}
+                                                    >
+                                                    {field.value ? (
+                                                        format(field.value, "PPP", { locale: ptBR })
+                                                    ) : (
+                                                        <span>Escolha uma data</span>
+                                                    )}
+                                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                                    </Button>
+                                                </FormControl>
+                                                </PopoverTrigger>
+                                                <PopoverContent className="w-auto p-0" align="start">
+                                                <Calendar
+                                                    mode="single"
+                                                    selected={field.value}
+                                                    onSelect={field.onChange}
+                                                    disabled={(date) =>
+                                                    date > new Date() || date < new Date("1900-01-01")
+                                                    }
+                                                    initialFocus
+                                                    locale={ptBR}
+                                                />
+                                                </PopoverContent>
+                                            </Popover>
+                                            <FormMessage />
                                         </FormItem>
-                                        <FormItem className="flex items-center space-x-2">
-                                            <FormControl>
-                                            <RadioGroupItem value="income" id="income" />
-                                            </FormControl>
-                                            <FormLabel htmlFor="income" className="font-normal">
-                                            Receita
-                                            </FormLabel>
-                                        </FormItem>
-                                        </RadioGroup>
-                                    </FormControl>
-                                    <FormMessage />
-                                    </FormItem>
-                                )}
+                                    )}
                                 />
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <FormField
+                                    control={form.control}
+                                    name="type"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                        <FormLabel>
+                                            <div className="flex items-center gap-2">
+                                            <ArrowDown className="h-4 w-4" /> Tipo de Transação
+                                            </div>
+                                        </FormLabel>
+                                        <FormControl>
+                                            <RadioGroup
+                                            onValueChange={field.onChange}
+                                            defaultValue={field.value}
+                                            className="flex items-center space-x-4 pt-2"
+                                            >
+                                            <FormItem className="flex items-center space-x-2">
+                                                <FormControl>
+                                                <RadioGroupItem value="expense" id="expense" />
+                                                </FormControl>
+                                                <FormLabel htmlFor="expense" className="font-normal">
+                                                Despesa
+                                                </FormLabel>
+                                            </FormItem>
+                                            <FormItem className="flex items-center space-x-2">
+                                                <FormControl>
+                                                <RadioGroupItem value="income" id="income" />
+                                                </FormControl>
+                                                <FormLabel htmlFor="income" className="font-normal">
+                                                Receita
+                                                </FormLabel>
+                                            </FormItem>
+                                            </RadioGroup>
+                                        </FormControl>
+                                        <FormMessage />
+                                        </FormItem>
+                                    )}
+                                    />
+                            </div>
+                            
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
                                 <FormField
                                 control={form.control}
                                 name="category"
@@ -283,11 +365,17 @@ export default function TransactionsPage() {
                                         </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
-                                        {availableCategories.map((cat) => (
-                                            <SelectItem key={cat} value={cat}>
-                                            {cat}
-                                            </SelectItem>
-                                        ))}
+                                        {availableCategories.map((cat) => {
+                                            const Icon = cat.icon;
+                                            return (
+                                                <SelectItem key={cat.name} value={cat.name}>
+                                                    <div className="flex items-center gap-2">
+                                                        <Icon className="h-4 w-4" />
+                                                        {cat.name}
+                                                    </div>
+                                                </SelectItem>
+                                            )
+                                        })}
                                         <SelectItem value="new">
                                             <div className="flex items-center gap-2">
                                             <PlusCircle className="h-4 w-4" />
@@ -302,26 +390,62 @@ export default function TransactionsPage() {
                                 />
 
                                 {categoryValue === "new" && (
-                                <FormField
-                                    control={form.control}
-                                    name="newCategory"
-                                    render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>
-                                        <div className="flex items-center gap-2">
-                                            <PlusCircle className="h-4 w-4" /> Nova Categoria
-                                        </div>
-                                        </FormLabel>
-                                        <FormControl>
-                                        <Input
-                                            placeholder="Ex: Streaming, Mercado"
-                                            {...field}
+                                    <>
+                                        <FormField
+                                            control={form.control}
+                                            name="newCategory"
+                                            render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>
+                                                <div className="flex items-center gap-2">
+                                                    <PlusCircle className="h-4 w-4" /> Nome da Nova Categoria
+                                                </div>
+                                                </FormLabel>
+                                                <FormControl>
+                                                <Input
+                                                    placeholder="Ex: Streaming"
+                                                    {...field}
+                                                />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                            )}
                                         />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                    )}
-                                />
+                                        <FormField
+                                            control={form.control}
+                                            name="newCategoryIcon"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>
+                                                        <div className="flex items-center gap-2">
+                                                            <Tag className="h-4 w-4" /> Ícone da Categoria
+                                                        </div>
+                                                    </FormLabel>
+                                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                        <FormControl>
+                                                            <SelectTrigger>
+                                                                <SelectValue placeholder="Selecione um ícone" />
+                                                            </SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectContent>
+                                                            {availableIcons.map((icon) => {
+                                                                const Icon = icon.icon;
+                                                                return (
+                                                                    <SelectItem key={icon.name} value={icon.name}>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <Icon className="h-4 w-4" />
+                                                                            {icon.name}
+                                                                        </div>
+                                                                    </SelectItem>
+                                                                );
+                                                            })}
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </>
                                 )}
                             </div>
                             
@@ -396,42 +520,52 @@ export default function TransactionsPage() {
                         <TableRow>
                             <TableHead>Descrição</TableHead>
                             <TableHead>Categoria</TableHead>
+                            <TableHead className="hidden md:table-cell text-right">Data</TableHead>
                             <TableHead className="text-right">Valor</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {transactions.length > 0 ? (
-                            transactions.map((transaction, index) => (
-                            <TableRow key={index}>
-                                <TableCell>
-                                <div className="flex items-center gap-2">
-                                    {transaction.type === 'income' ? (
-                                    <ArrowUpCircle className="h-5 w-5 text-green-500" />
-                                    ) : (
-                                    <ArrowDownCircle className="h-5 w-5 text-red-500" />
+                            transactions.map((transaction, index) => {
+                                const Icon = getCategoryIcon(transaction.category);
+                                return (
+                                <TableRow key={index}>
+                                    <TableCell>
+                                    <div className="flex items-center gap-2">
+                                        {transaction.type === 'income' ? (
+                                        <ArrowUpCircle className="h-5 w-5 text-green-500" />
+                                        ) : (
+                                        <ArrowDownCircle className="h-5 w-5 text-red-500" />
+                                        )}
+                                        <div className="font-medium">{transaction.description}</div>
+                                    </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                            <Icon className="h-4 w-4" />
+                                            {transaction.category}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="hidden md:table-cell text-right text-muted-foreground">
+                                        {format(transaction.date, "dd/MM/yyyy", { locale: ptBR })}
+                                    </TableCell>
+                                    <TableCell
+                                    className={cn(
+                                        "text-right font-semibold",
+                                        transaction.type === "income"
+                                        ? "text-green-600"
+                                        : "text-slate-800 dark:text-slate-300"
                                     )}
-                                    <div className="font-medium">{transaction.description}</div>
-                                </div>
-                                </TableCell>
-                                <TableCell>
-                                    <div className="text-sm text-muted-foreground">{transaction.category}</div>
-                                </TableCell>
-                                <TableCell
-                                className={cn(
-                                    "text-right font-semibold",
-                                    transaction.type === "income"
-                                    ? "text-green-600"
-                                    : "text-slate-800 dark:text-slate-300"
-                                )}
-                                >
-                                {transaction.type === "income" ? "+" : "-"}
-                                {formatCurrency(transaction.amount)}
-                                </TableCell>
-                            </TableRow>
-                            ))
+                                    >
+                                    {transaction.type === "income" ? "+" : "-"}
+                                    {formatCurrency(transaction.amount)}
+                                    </TableCell>
+                                </TableRow>
+                                )
+                            })
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={3} className="text-center h-24">
+                                <TableCell colSpan={4} className="text-center h-24">
                                     Nenhuma transação registrada ainda.
                                 </TableCell>
                             </TableRow>
